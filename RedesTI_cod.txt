@@ -1,0 +1,191 @@
+package Vector_Distancia;
+
+import java.io.*; //aquí estan incluidos BufferedReader, IOException, InputStreamReader
+import java.util.*;
+
+public class Ford{
+    
+  int[][] matrizAdy;
+  int nNodos;
+  List Origenes = new ArrayList();
+  List Visitas = new ArrayList();
+  List caminos = new ArrayList();
+  
+  String tmp;
+  InputStreamReader entrada;
+  BufferedReader util;
+
+  Ford(int numNodos) throws IOException{
+    long InicioA = System.nanoTime();
+    matrizAdy = new int[numNodos][numNodos];
+    int aux=1;
+    entrada = new InputStreamReader(System.in);
+    util = new BufferedReader(entrada);
+    nNodos=numNodos;
+    long FinA = System.nanoTime();
+    long TiempoA= FinA-InicioA;
+    cargarDatos();
+    System.out.print(" Coloque el numero del ROUTER origen: ");
+    aux= (Integer.valueOf(util.readLine())) - 1;
+    long InicioB = System.nanoTime();
+    matrizAdy[aux][aux]=0;
+    resuelve(aux);
+    long FinB = System.nanoTime();
+    long TiempoB= FinB - InicioB;
+     System.out.println("\nTiempo de ejecución del algoritmo: ");
+      System.out.print(TiempoA + TiempoB + " nanosegundos");
+  }
+  
+  
+  private void cargarDatos() throws IOException{
+    
+    System.out.println(" Ahora ingresa los datos que se te soliciten: ");
+    for(int i=1;i<=nNodos;i++)
+    {
+      for(int j=1;j<=nNodos;j++)
+      {
+        if(j!=i){
+          System.out.println("¿Tiene el nodo R" + i +" conexion al nodo R"+ j + "?");
+          System.out.println("| 1: sí || 0: No |");
+            matrizAdy[i-1][j-1]=Integer.valueOf(util.readLine());
+            if(matrizAdy[i-1][j-1]==0) matrizAdy[i-1][j-1] = -1;
+        }
+        else
+          matrizAdy[i-1][i-1]=-1;
+      }
+    }
+  }
+  
+  private void resuelve(int origen){
+    int nod;
+    int minimo;
+    int aux;
+    int nodCambio=0;
+    int intento;
+
+    //Mostrando lista de adyacencia
+      System.out.println("Lista de adyacencia identificada: ");
+    for(int h = 0; h <this.nNodos;h++)
+    {
+        for(int g =0; g<this.nNodos;g++)
+        {
+            System.out.print(this.matrizAdy[h][g]+ "\t");
+        }
+        System.out.print("\n");
+    }
+    
+    //Inicializando listas
+    for(int i=0;i<nNodos;i++)
+    {
+      if(i != origen) Visitas.add(""+i);
+      else Origenes.add(""+i);
+      caminos.add("");
+    }
+    //Aplicando ciclo i de Ford
+    for(int i=0;i<nNodos;i++)
+    {
+      minimo=-1;
+      for(int j=0;j<Visitas.size();j++)
+      {
+        nod=Integer.valueOf((String)(Visitas.get(j)));
+        aux=CaminoMin(nod);
+        if(minimo==-1 || (aux<minimo && aux!=-1)){
+          minimo=aux;
+          nodCambio=j;
+        }
+      }
+      if(minimo!=-1){
+        Origenes.add(""+(String)(Visitas.get(nodCambio)));
+        Visitas.remove(nodCambio);
+      }
+    }
+
+    //Imprimiendo resultados
+    System.out.print("\n Reporte de la topología:");
+    for(int k=0;k<caminos.size();k++)
+    {
+      if(k!= origen){
+        tmp=(String)(caminos.get(k))+(char)(k+65);
+        caminos.set(k,tmp);
+      }
+    }
+
+    for(int j=0;j<caminos.size();j++)
+    {
+      if(j!=origen){
+        intento=0;
+        tmp=(String)(caminos.get(j));
+          while(tmp.charAt(0)!=(char)(origen+65) && intento<10){
+            aux=tmp.charAt(0)-65;
+            tmp=((String)(caminos.get(aux)))+tmp.substring(1,tmp.length());
+            if(++intento==10) //puesto así para que INTENTO se use en esta misma expresión
+              tmp="*"+tmp;
+          };
+        Saltos(tmp,j,origen);
+      }
+    }
+  }
+
+  private int CaminoMin(int dest){
+    int min=-1;
+    int nod=0;
+    int nodOrig=-1;
+    int aux;
+    for(int i=0;i<Origenes.size();i++){
+      nod=Integer.valueOf((String)(Origenes.get(i)));
+      if(matrizAdy[nod][nod]!=-1 && matrizAdy[nod][dest]!=-1) aux=matrizAdy[nod][nod]+matrizAdy[nod][dest];
+      else aux=-1;
+      if((aux<min && aux!=-1)||min==-1){
+        min=aux;
+        nodOrig=nod;
+      }
+    }
+    if(min!=-1){
+      matrizAdy[dest][dest]=min;
+      caminos.set(dest,""+(char)(nodOrig+65));
+    }
+    return min;
+  }
+
+  private void Saltos(String cam, int nod, int o){
+    System.out.print("\nRuta: ");
+    for(int i=0;i<cam.length();i++)
+        System.out.print(" R"+((int)(cam.charAt(i))-64)+(i==cam.length()-1?"":"->")); // es la sintaxis más simple para colocar un if
+      System.out.print(" costo: "+matrizAdy[nod][nod]);
+  }
+}
+
+
+
+
+================================================================================================================================
+
+
+package Vector_Distancia;
+
+/**
+ *
+ * @author Jesus
+ */
+import java.io.*;
+
+public class Pruebas{
+
+  public static void main(String args[]) throws IOException{
+
+    int nodos=0;
+    System.out.println("\n\tAlogoritmo de Ford para enrutamiento bajo Vector distancia");
+    System.out.print("Numero de nodos que tiene la red: ");
+
+    do{
+        InputStreamReader numero = new InputStreamReader(System.in);
+        BufferedReader numUtil = new BufferedReader(numero);
+        nodos=Integer.valueOf(numUtil.readLine());
+
+        if(nodos<3 || nodos>26) System.out.print(" El numero de nodos debe estar entre 3 y 26 ");
+       //Desde 3 nodos porque podemos mostrar ciclo, pero hasta 26 porque es lo que puede soportar la programación
+    }
+    while(nodos<3 || nodos>26);
+    Ford obj = new Ford(nodos);
+  }
+}
